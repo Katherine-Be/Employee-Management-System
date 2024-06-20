@@ -1,0 +1,23 @@
+{
+  "name": "ems",
+  "version": "1.0.0",
+  "description": "an employee tracking system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Katherine-Be/Employee-Management-System.git"
+  },
+  "author": "Katherine Alex Bensley",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Katherine-Be/Employee-Management-System/issues"
+  },
+  "homepage": "https://github.com/Katherine-Be/Employee-Management-System#readme",
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.10.1"
+  }
+}
