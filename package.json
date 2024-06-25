@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/Katherine-Be/Employee-Management-System#readme",
   "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "inquirer": "^8.2.4",
     "mysql2": "^3.10.1"
   }
