@@ -75,7 +75,7 @@ function init() {
             case "add employee":
                 addEmployee();
                 break;
-            case "ipdate employee":
+            case "update employee":
                 updateEmployee();
                 break;
             case "exit":
@@ -177,26 +177,26 @@ function addDepartment() {
             name: 'departmentName'
         }
     ])
-    .then((answer) => {
+    .then(async (answer) => {
             var sql = "INSERT INTO department (name) VALUES ('" + answer.departmentName + "')";
-            pool.query(sql, function (err, result) {
-              if (err) throw err;
-              console.log("Department added");
-            });
-            pool.query("SELECT * FROM department", function (err, result) {
-                if (err) throw err;
-                console.log(result);
-              });
-          })
-    .then(() => {
-        returnToMenu();
-    });
+            await new Promise((resolve, reject) => {
+                pool.query(sql, function (err, result) {
+                    if (err) throw err;
+                    console.log("Department added");
+                pool.query("SELECT * FROM department", function (err, result) {
+                    if (err) throw err;
+                    console.table(result);
+                returnToMenu();
+                });
+                resolve();
+            })
+    })
+})
 };
 
 function addRole() {
     pool.query("SELECT id as value, name FROM department", function (err, result1) {
         if (err) throw err;
-        console.log(result1);
         inquirer.prompt([
             {
                 type: 'input',
@@ -218,68 +218,76 @@ function addRole() {
         ])
     
     
-        .then((answer) => {
+        .then (async (answer) => {
                 const sql = "INSERT INTO role (title, salary, department_id) VALUES ('" + answer.roleTitle + "', '" + answer.roleSalary + "', '" + answer.roleDepartmentId + "')";
-                pool.query(sql, function (err, result) {
+                await new Promise((resolve, reject) => {
+                    pool.query(sql, function (err, result) {
                   if (err) throw err;
                   console.log("Role added");
-                });
                 pool.query("SELECT * FROM role", function (err, result) {
                     if (err) throw err;
-                    console.log(result);
+                    console.table(result);
+                returnToMenu();
                 });
+                resolve();
+                });
+                });
+        });
+    });
+};
+
+async function addEmployee() {
+    await new Promise((resolve,reject) => {
+        pool.query("SELECT id as value, title FROM role", function (err, result) {
+        if (err) throw err;
+        // pool.query("SELECT id as value, first_name FROM employee", function (err, result2) {
+        //     if (err) throw err;
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    message: "New employee first name:",
+                    name: 'employeeFirstName'
+                },
+                {
+                    type: 'input',
+                    message: "New employee last name:",
+                    name: 'employeeLastName'
+                },
+                {
+                    type: 'input',
+                    message: result1,
+                    //later populate current roles as choices
+                    name: 'employeeRoleID'
+                },
+                // {
+                //     type: 'input',
+                //     message: result2,
+                //     //later populate current employees as choices
+                //     name: 'employeeManagerID'
+                // }
+            ])
+
+            .then (async (answer) => {
+                const sql = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
+                await new Promise((resolve, reject) => {
+                    pool.query(sql, function (err, result) {
+                        if (err) throw err;
+                        console.log("Employee added");
+                    pool.query("SELECT * FROM employee", function (err, result) {
+                        if (err) throw err;
+                        console.table(result);
+                    returnToMenu();
+                    });
+                    resolve();
+                    })
+                })
             });
-            init();
-    });
-
-    // let departmentOptionsArray = Object.values(departmentOptions);
-    // let departmentOptionsArray = [];
-    // if (departmentOptions.length > 0) {
-    // // for (let i = 0; i < departmentOptions.length; i++) {
-    //     // departmentOptionsArray.push(departmentOptions[i].name);
-    // }
-};
-
-function addEmployee() {;
-    inquirer.prompt([
-        {
-            type: 'input',
-            message: "New employee first name:",
-            name: 'employeeFirstName'
-        },
-        {
-            type: 'input',
-            message: "New employee last name:",
-            name: 'employeeLastName'
-        },
-        {
-            type: 'input',
-            message: "New employee role ID:",
-            //later populate current roles as choices
-            name: 'employeeRoleID'
-        },
-        {
-            type: 'input',
-            message: "New employee manager ID:",
-            //later populate current employees as choices
-            name: 'employeeManagerID'
-        }
-    ])
-
-    .then((answer) => {
-        const sql = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
-        pool.query(sql, function (err, result) {
-            if (err) throw err;
-            console.log("Employee added");
-        });
-        con.query("SELECT * FROM employee", function (err, result) {
-            if (err) throw err;
-            console.log(result);
+       
         });
     });
-    init();
+}
+// })};
 
-};
 
 //<-----userAction UPDATE functions----->
 function updateEmployee() {
