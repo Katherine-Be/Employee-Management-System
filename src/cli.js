@@ -238,8 +238,9 @@ function addRole() {
 
 async function addEmployee() {
     await new Promise((resolve,reject) => {
-        pool.query("SELECT id as value, title FROM role", function (err, result) {
+        pool.query("SELECT id as value, title FROM role", function (err, result2) {
         if (err) throw err;
+        resolve();
         // pool.query("SELECT id as value, first_name FROM employee", function (err, result2) {
         //     if (err) throw err;
             inquirer.prompt([
@@ -254,8 +255,9 @@ async function addEmployee() {
                     name: 'employeeLastName'
                 },
                 {
-                    type: 'input',
-                    message: result1,
+                    type: 'list',
+                    message: "New employee role",
+                    choices: result2,
                     //later populate current roles as choices
                     name: 'employeeRoleID'
                 },
