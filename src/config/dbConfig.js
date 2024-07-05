@@ -5,10 +5,10 @@ const pool = mysql.createPool({
     host: process.env.LOCALHOST,
     user: process.env.USER_NAME,
     password: process.env.PASSWORD,
-    database: process.env.DATABASE,
+    // database: process.env.DATABASE,
     waitForConnections: true, 
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 3
 });
 
 module.exports = pool;

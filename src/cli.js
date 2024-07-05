@@ -5,6 +5,9 @@ const pool = require('./config/dbConfig');
 const mysql = require('mysql2');
 var userAction = "";
 require ("console.table");
+require('dotenv').config();
+
+const db_name =  process.env.DATABASE;
 
 
 function returnToMenu () {
@@ -63,7 +66,7 @@ function init() {
             case "view roles":
                 viewRoles();
                 break;
-            case "view rmployees":
+            case "view employees":
                 viewEmployees();
                 break;
             case "add department":
@@ -141,7 +144,7 @@ function init() {
 //show departments table organized as table in the CLI
 
 function viewDepartments() {
-    pool.query("SELECT * FROM department", function (err, result) {
+    pool.query("SELECT * FROM " + db_name + ".department", function (err, result) {
             if (err) throw err;
             console.table(result);
             returnToMenu();
@@ -150,7 +153,7 @@ function viewDepartments() {
 };
 
 function viewRoles() {
-    pool.query("SELECT * FROM role", function (err, result) {
+    pool.query("SELECT * FROM " + db_name + ".role", function (err, result) {
           if (err) throw err;
           console.table(result);
           returnToMenu();
@@ -158,7 +161,7 @@ function viewRoles() {
 };
 
 function viewEmployees() {
-    pool.query("SELECT * FROM employee", function (err, result) {
+    pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
           if (err) throw err;
           console.table(result);
           returnToMenu();
@@ -178,12 +181,12 @@ function addDepartment() {
         }
     ])
     .then(async (answer) => {
-            var sql = "INSERT INTO department (name) VALUES ('" + answer.departmentName + "')";
+            var sql = "INSERT INTO " + db_name + ".department (name) VALUES ('" + answer.departmentName + "')";
             await new Promise((resolve, reject) => {
                 pool.query(sql, function (err, result) {
                     if (err) throw err;
                     console.log("Department added");
-                pool.query("SELECT * FROM department", function (err, result) {
+                pool.query("SELECT * FROM " + db_name + ".department", function (err, result) {
                     if (err) throw err;
                     console.table(result);
                 returnToMenu();
@@ -195,7 +198,7 @@ function addDepartment() {
 };
 
 function addRole() {
-    pool.query("SELECT id as value, name FROM department", function (err, result1) {
+    pool.query("SELECT id as value, name FROM " + db_name + ".department", function (err, result1) {
         if (err) throw err;
         inquirer.prompt([
             {
@@ -219,12 +222,12 @@ function addRole() {
     
     
         .then (async (answer) => {
-                const sql = "INSERT INTO role (title, salary, department_id) VALUES ('" + answer.roleTitle + "', '" + answer.roleSalary + "', '" + answer.roleDepartmentId + "')";
+                const sql = "INSERT INTO " + db_name + ".role (title, salary, department_id) VALUES ('" + answer.roleTitle + "', '" + answer.roleSalary + "', '" + answer.roleDepartmentId + "')";
                 await new Promise((resolve, reject) => {
                     pool.query(sql, function (err, result) {
                   if (err) throw err;
                   console.log("Role added");
-                pool.query("SELECT * FROM role", function (err, result) {
+                pool.query("SELECT * FROM " + db_name + ".role", function (err, result) {
                     if (err) throw err;
                     console.table(result);
                 returnToMenu();
@@ -238,9 +241,9 @@ function addRole() {
 
 async function addEmployee() {
     await new Promise((resolve, reject) => {
-        pool.query("SELECT id as value, title FROM role", function (err, result2) {
+        pool.query("SELECT id as value, title FROM " + db_name + ".role", function (err, result2) {
             if (err) throw err;
-            // Transform result2 into the format expected by inquirer
+            // Transform result2 into " + db_name + ".the format expected by inquirer
             const roleChoices = result2.map(role => ({
                 name: role.title, // Displayed to the user
                 value: role.value // Returned when the user makes a selection
@@ -270,12 +273,12 @@ async function addEmployee() {
 
             .then (async (answer) => {
                 console.log(answer);
-                const sql = "INSERT INTO employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
+                const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
                 await new Promise((resolve, reject) => {
                     pool.query(sql, function (err, result) {
-                        // if (err) throw err;  //for some reason it works without this line, but returns first_name column not found in field with the line there
+                        if (err) throw err;  //for some reason it works without this line, but returns first_name column not found in field with the line there
                         console.log("Employee added");
-                    pool.query("SELECT * FROM employee", function (err, result) {
+                    pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
                         if (err) throw err;
                         console.table(result);
                     returnToMenu();
@@ -291,17 +294,34 @@ async function addEmployee() {
 
 //<-----userAction UPDATE functions----->
 async function updateEmployee() {
-    await new Promise ((resolve, reject) => {
-        pool.query("SELECT id as value, first_name FROM employee, last_name FROM employee", function (err, result3) {
-            // if (err) throw err;
-            const employeeChoices = result3.map(employee => ({
-                name: employee.first_name + " " + employee.last_name,
-                value: employee.value
-            }));
-            resolve(employeeChoices);
-        });
-    })
-    .then(employeeChoices => {
+    Promise.all([
+        new Promise ((resolve, reject) => {
+            pool.query("SELECT id as value, first_name, last_name FROM " + db_name + ".employee", function (err, result3) {
+                // if (err) throw err;
+                const employeeChoices = result3.map(employee => ({
+                    name: employee.first_name + " " + employee.last_name,
+                    value: employee.value
+                }));
+                resolve(employeeChoices);
+            });
+        }),
+        new Promise ((resolve, reject) => {
+        pool.query("SELECT id as value, title FROM " + db_name + ".role", function (err, result4) {
+                if (err) throw err;
+                const roleChoices = result4.map(role => ({
+                    name: role.title,
+                    value: role.value
+                }));
+                resolve(roleChoices);
+            });
+
+        })
+    ])
+    // .then(([employeeChoices, roleChoices]) => {
+    //     return [employeeChoices, roleChoices];
+    // })
+    .then(([employeeChoices, roleChoices]) => {
+        console.log(employeeChoices, roleChoices);
     inquirer.prompt([
         {
             type: 'list',
@@ -310,38 +330,36 @@ async function updateEmployee() {
             name: 'employeeID'
         },
         {
-            type: 'input',
+            type: 'list',
             message: "New role ID",
-            //later populate current roles as choices
+            choices: roleChoices,
             name: 'employeeRoleID'
         },
-        {
-            type: 'input',
-            message: "New manager ID:",
-            //later populate current employees as choices
-            name: 'employeeManagerID'
-        }
+        // {
+        //     type: 'input',
+        //     message: "New manager ID:",
+        //     //later populate current employees as choices
+        //     name: 'employeeManagerID'
+        // }
     ])
 
-    .then (async(answer) => {
+    .then ((answer) => {
 
-        const sql = "UPDATE employee SET role_id = '" + answer.employeeRoleID + "', manager_id = '" + answer.employeeManagerID + "' WHERE employee_id = '" + answer.employeeID + "'";
-        await new Promise((resolve, reject) => {
-
-        pool.query(sql, function (err, result) {
-            if (err) throw err;
-            console.log("Employee updated");
-            pool.query("SELECT * FROM employee", function (err, result) {
-            if (err) throw err;
-            console.log(result);
-            returnToMenu();
+        const sql = "UPDATE " + db_name + ".employee SET role_id = '" + answer.employeeRoleID + "' WHERE id = '" + answer.employeeID + "'";
+        new Promise((resolve, reject) => {
+            pool.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log("Employee updated");
+                pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
+                if (err) throw err;
+                console.log(result);
+                returnToMenu();
+                });
+            resolve();
             });
-        resolve();
-        });
         })
     })
-    })
-}
+})}
 
 
 
