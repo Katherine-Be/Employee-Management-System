@@ -218,8 +218,11 @@ async function addEmployee() {
             });
         })
     ])
-    
+
     .then(([roleChoices, managerChoices]) => {
+        if (managerChoices.length === 0) {
+            managerChoices = [{name: "none", value: null}];
+        }
         inquirer.prompt([
                 {
                     type: 'input',
@@ -244,11 +247,14 @@ async function addEmployee() {
                     name: 'employeeManagerID'
                 }
         ])
-
+        
         .then (async (answer) => {
             console.log(answer);
-            const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
-            await new Promise((resolve, reject) => {
+            if (answer.employeeManagerID == null) {
+                sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
+            } else {sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
+            };
+                await new Promise((resolve, reject) => {
                 pool.query(sql, function (err, result) {
                     if (err) throw err;
                     console.log("Employee added");
