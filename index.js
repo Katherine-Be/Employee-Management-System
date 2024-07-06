@@ -6,11 +6,6 @@ const { init } = require('./src/cli');
 // Start the application
 console.log("Starting the application...");
 
-// function startApp (){
-//     createDB();
-//     init();
-// }
-
 async function startApp() {
     try {
         await createDB();

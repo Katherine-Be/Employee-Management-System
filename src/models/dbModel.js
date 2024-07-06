@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const db_name =  process.env.DATABASE;
 
+//<----create database---->
 async function createDB() {
   try {
     // pool.query(`DROP DATABASE IF EXISTS ${db_name}`);
@@ -31,6 +32,7 @@ async function createDB() {
     });
     console.log(`Role table created or already exists`);
 
+    // Create employee table
     pool.query(`CREATE TABLE IF NOT EXISTS ${db_name}.employee (id INT AUTO_INCREMENT PRIMARY KEY, first_name VARCHAR(30), last_name VARCHAR(30), role_id INT, manager_id INT, FOREIGN KEY (role_id) REFERENCES role(id), FOREIGN KEY (manager_id) REFERENCES employee(id))`, (err) => {
       if(err) {
         console.log(err)
@@ -38,15 +40,8 @@ async function createDB() {
     });
     console.log(`Employee table created or already exists`);
 
-    // pool.query(`USE ${db_name}`, () => {
-    //   if(err) {
-    //     console.log(err)
-    //   }
-    // })
-    // console.log(`Using ${db_name} database`);
-
-
-      // connection.release();
+    
+//<----reestablish db connection using the db name since it has now been created---->
       return await new Promise((resolve, reject) => {
         pool.getConnection(function (err, con) {
           if (err instanceof Error) {
@@ -60,14 +55,13 @@ async function createDB() {
                   return;
                 } else {
                   console.log('Using database:', db_name);
-                  con.release()
+                  con.release() // release connection
                   resolve()
                 }
               })
           }
         })
     })
-    
   } catch (error) {
     console.error(`An error occurred:`, error.message);
   }

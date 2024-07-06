@@ -1,6 +1,4 @@
-//  start appuserAction prompt
 const inquirer = require('inquirer');
-// const mysql = require('mysql2');
 const pool = require('./config/dbConfig');
 const mysql = require('mysql2');
 var userAction = "";
@@ -9,25 +7,29 @@ require('dotenv').config();
 
 const db_name =  process.env.DATABASE;
 
-
+//<---- return to menu prompt ---->
 function returnToMenu () {
     inquirer.prompt([
         {
             type: 'list',
             message: "Return to main menu?",
             choices: [
-                'Yes'],
+                'Yes',
+                'No'],
             name: 'returnResponse'
         }
     ])    
     .then((answer) => {
         if (answer.returnResponse === "Yes") {
             init();
-        } 
+        } else {
+            console.log("Goodbye");
+            process.exit(1);
+        }
     })
 };
 
-    
+//<---- start app and initial menu prompts ---->
 function init() {
     userAction = inquirer.prompt([
         // prompt format:
@@ -99,50 +101,7 @@ function init() {
 };
 
 
-//<-----userAction RETURN functions----->
-
-
-// function returnToMenu (userAction) {
-//     inquirer.prompt([
-//         {
-//             type: 'list',
-//             message: "Return to main menu?",
-//             choices: [
-//                 'Yes',
-//                 'No, go back to editing resource'
-//             ],
-//             name: 'returnResponse'
-//         }
-//     ])
-//     .then((answer) => {
-//         if (answer.returnResponse === "Yes") {
-//             init();
-//         } else{
-//             switch (userAction) {
-//                 case "add department":
-//                     break;                    
-//                 case "add role":
-//                     addRole();
-//                     break;
-//                 case "add employee":
-//                     addEmployee();
-//                     break;
-//                 case "update employee":
-//                     updateEmployee();
-//                     break;
-//             }
-//         }})
-//     .catch((error) => {
-//         if (error.isTtyError) {
-//             console.log("Prompt couldn't be rendered in the current environment");
-//         } else {
-//         console.log(error);
-//     }})
-// };
-
-//<-----userAction VIEW functions----->
-//show departments table organized as table in the CLI
-
+//<----- userAction VIEW functions ----->
 function viewDepartments() {
     pool.query("SELECT * FROM " + db_name + ".department", function (err, result) {
             if (err) throw err;
@@ -168,10 +127,8 @@ function viewEmployees() {
         });
 };
 
-//<-----userAction ADD functions----->
 
-//add department and show updated department list
-
+//<----- userAction ADD functions ----->
 function addDepartment() {
     inquirer.prompt([
         {
@@ -213,9 +170,8 @@ function addRole() {
             },
             {
                 type: 'list',
-                message: "New role department ID:",
+                message: "New role department:",
                 choices: result1,
-                //later populate current departments as choices
                 name: 'roleDepartmentId'
             }
         ])
@@ -243,12 +199,11 @@ async function addEmployee() {
     await new Promise((resolve, reject) => {
         pool.query("SELECT id as value, title FROM " + db_name + ".role", function (err, result2) {
             if (err) throw err;
-            // Transform result2 into " + db_name + ".the format expected by inquirer
             const roleChoices = result2.map(role => ({
-                name: role.title, // Displayed to the user
-                value: role.value // Returned when the user makes a selection
+                name: role.title,
+                value: role.value
             }));
-            resolve(roleChoices); // Pass the transformed array for use in the prompt
+            resolve(roleChoices);
         });
     })
     .then(roleChoices => {
@@ -269,30 +224,29 @@ async function addEmployee() {
                     choices: roleChoices,
                     name: 'employeeRoleID'
                 }
-            ])
+        ])
 
-            .then (async (answer) => {
-                console.log(answer);
-                const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
-                await new Promise((resolve, reject) => {
-                    pool.query(sql, function (err, result) {
-                        if (err) throw err;  //for some reason it works without this line, but returns first_name column not found in field with the line there
-                        console.log("Employee added");
-                    pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
-                        if (err) throw err;
-                        console.table(result);
-                    returnToMenu();
-                    });
-                    resolve();
-                    })
+        .then (async (answer) => {
+            console.log(answer);
+            const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
+            await new Promise((resolve, reject) => {
+                pool.query(sql, function (err, result) {
+                    if (err) throw err;
+                    console.log("Employee added");
+                pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
+                    if (err) throw err;
+                    console.table(result);
+                returnToMenu();
+                });
+                resolve();
                 })
-            });
-       
-        });
+            })
+        });       
+    });
 }
 
 
-//<-----userAction UPDATE functions----->
+//<----- userAction UPDATE functions ----->
 async function updateEmployee() {
     Promise.all([
         new Promise ((resolve, reject) => {
@@ -314,12 +268,9 @@ async function updateEmployee() {
                 }));
                 resolve(roleChoices);
             });
-
         })
     ])
-    // .then(([employeeChoices, roleChoices]) => {
-    //     return [employeeChoices, roleChoices];
-    // })
+
     .then(([employeeChoices, roleChoices]) => {
         console.log(employeeChoices, roleChoices);
     inquirer.prompt([
@@ -331,16 +282,10 @@ async function updateEmployee() {
         },
         {
             type: 'list',
-            message: "New role ID",
+            message: "New role:",
             choices: roleChoices,
             name: 'employeeRoleID'
         },
-        // {
-        //     type: 'input',
-        //     message: "New manager ID:",
-        //     //later populate current employees as choices
-        //     name: 'employeeManagerID'
-        // }
     ])
 
     .then ((answer) => {
