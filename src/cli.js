@@ -249,7 +249,6 @@ async function addEmployee() {
         ])
         
         .then (async (answer) => {
-            console.log(answer);
             if (answer.employeeManagerID == null) {
                 sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
             } else {sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
@@ -308,7 +307,6 @@ async function updateEmployee() {
     ])
 
     .then(([employeeChoices, roleChoices]) => {
-        console.log(employeeChoices, roleChoices);
     inquirer.prompt([
         {
             type: 'list',
