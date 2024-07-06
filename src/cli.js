@@ -196,17 +196,30 @@ function addRole() {
 };
 
 async function addEmployee() {
-    await new Promise((resolve, reject) => {
-        pool.query("SELECT id as value, title FROM " + db_name + ".role", function (err, result2) {
-            if (err) throw err;
-            const roleChoices = result2.map(role => ({
-                name: role.title,
-                value: role.value
-            }));
-            resolve(roleChoices);
-        });
-    })
-    .then(roleChoices => {
+    Promise.all([
+        new Promise((resolve, reject) => {
+            pool.query("SELECT id as value, title FROM " + db_name + ".role", function (err, result2) {
+                if (err) throw err;
+                const roleChoices = result2.map(role => ({
+                    name: role.title,
+                    value: role.value
+                }));
+                resolve(roleChoices);
+            });
+        }),
+        new Promise ((resolve, reject) => {
+            pool.query("SELECT id as value, first_name, last_name FROM " + db_name + ".employee", function (err, result3) {
+                // if (err) throw err;
+                const managerChoices = result3.map(manager => ({
+                    name: manager.first_name + " " + manager.last_name,
+                    value: manager.value
+                }));
+                resolve(managerChoices);
+            });
+        })
+    ])
+    
+    .then(([roleChoices, managerChoices]) => {
         inquirer.prompt([
                 {
                     type: 'input',
@@ -223,12 +236,18 @@ async function addEmployee() {
                     message: "New employee role",
                     choices: roleChoices,
                     name: 'employeeRoleID'
+                },
+                {
+                    type: 'list',
+                    message: "New employee manager",
+                    choices: managerChoices,
+                    name: 'employeeManagerID'
                 }
         ])
 
         .then (async (answer) => {
             console.log(answer);
-            const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "')";
+            const sql = "INSERT INTO " + db_name + ".employee (first_name, last_name, role_id, manager_id) VALUES ('" + answer.employeeFirstName + "', '" + answer.employeeLastName + "', '" + answer.employeeRoleID + "', '" + answer.employeeManagerID + "')";
             await new Promise((resolve, reject) => {
                 pool.query(sql, function (err, result) {
                     if (err) throw err;
@@ -269,6 +288,17 @@ async function updateEmployee() {
                 resolve(roleChoices);
             });
         })
+        //  manager choices //does not select just managers, but selects all employees
+        // new Promise ((resolve, reject) => {
+        //     pool.query("SELECT id as value, first_name, last_name FROM " + db_name + ".employee WHERE EXISTS (SELECT role_id FROM " + db_name + ".role WHERE role.title = 'manager')", function (err, result5) {
+        //         if (err) throw err;
+        //         const managerChoices = result5.map(manager => ({
+        //             name: manager.first_name + " " + manager.last_name,
+        //             value: manager.value
+        //         }));
+        //         resolve(managerChoices);
+        //     });
+        // })
     ])
 
     .then(([employeeChoices, roleChoices]) => {
@@ -278,19 +308,25 @@ async function updateEmployee() {
             type: 'list',
             message: "Employee to update:",
             choices: employeeChoices,
-            name: 'employeeID'
+            name: 'employee'
         },
         {
             type: 'list',
             message: "New role:",
             choices: roleChoices,
-            name: 'employeeRoleID'
+            name: 'employeeRole'
         },
+        {
+            type: 'list',
+            message: "New manager:",
+            choices: employeeChoices,
+            name: 'employeeManager'
+        }
     ])
 
     .then ((answer) => {
 
-        const sql = "UPDATE " + db_name + ".employee SET role_id = '" + answer.employeeRoleID + "' WHERE id = '" + answer.employeeID + "'";
+        const sql = "UPDATE " + db_name + ".employee SET role_id = '" + answer.employeeRole + "', manager_id = '" + answer.employeeManager + "' WHERE id = '" + answer.employee + "'";
         new Promise((resolve, reject) => {
             pool.query(sql, function (err, result) {
                 if (err) throw err;
