@@ -339,7 +339,7 @@ async function updateEmployee() {
                 console.log("Employee updated");
                 pool.query("SELECT * FROM " + db_name + ".employee", function (err, result) {
                 if (err) throw err;
-                console.log(result);
+                console.table(result);
                 returnToMenu();
                 });
             resolve();
