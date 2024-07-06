@@ -40,7 +40,7 @@ function init() {
         // },
         {
             type: 'rawlist',
-            message: "View all:",
+            message: "What do you want to do?",
             choices: [
                 'view departments',
                 'view roles',
