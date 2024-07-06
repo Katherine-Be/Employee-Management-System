@@ -9,7 +9,7 @@ const db_name =  process.env.DATABASE;
 //<----create database---->
 async function createDB() {
   try {
-    // pool.query(`DROP DATABASE IF EXISTS ${db_name}`);
+    // pool.query(`DROP DATABASE IF EXISTS ${db_name}`);  //  when testing, uncomment this line to drop the database
     // console.log(`Database dropped if it exists`);
 
     // Create database if it does not exist
